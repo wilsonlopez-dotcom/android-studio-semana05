@@ -1,52 +1,50 @@
 package com.lopez.semana04
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.Surface
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.lopez.semana04.ui.theme.Semana04Theme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             Semana04Theme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Scaffold { innerPadding ->
-                        // Contenedor principal que respeta paddings del Scaffold
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // ✅ Fondo con imagen
+                        Image(
+                            painter = painterResource(id = R.drawable.fondo), // pon tu imagen en res/drawable
+                            contentDescription = "Fondo",
+                            contentScale = ContentScale.Crop, // para que ocupe toda la pantalla
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // ✅ Contenido encima del fondo
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
-                            RegistroFormulario()
+                            ContadorScreen()
+                            BloqueoContador()
                         }
                     }
                 }
@@ -56,108 +54,94 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RegistroFormulario(modifier: Modifier = Modifier) {
-    // Estados (persisten en rotaciones)
-    var nombre by rememberSaveable { mutableStateOf("") }
-    var correo by rememberSaveable { mutableStateOf("") }
-    var suscrito by rememberSaveable { mutableStateOf(false) }
-    var resultado by rememberSaveable { mutableStateOf("") }
-
-    val context = LocalContext.current
+fun ContadorScreen() {
+    var ephemeralCount by remember { mutableStateOf(0) }
+    var persistentCount by rememberSaveable { mutableStateOf(0) }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "📝 Registro rápido",
-            fontSize = 30.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF673AB7)
-        )
+        Text(" ✏\uFE0FComparando estados", style = MaterialTheme.typography.titleLarge)
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Nombre
-        OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it },
-            label = { Text("Nombre") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Correo
-        OutlinedTextField(
-            value = correo,
-            onValueChange = { correo = it },
-            label = { Text("Correo") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Switch de preferencia
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("📩 Suscribirme al boletín")
-            Switch(
-                checked = suscrito,
-                onCheckedChange = { suscrito = it }
-            )
+            Text("Ephemeral (remember): $ephemeralCount")
+            Button(onClick = { ephemeralCount++ }) {
+                Text("+1")
+            }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Persistente (rememberSaveable): $persistentCount")
+            Button(onClick = { persistentCount++ }) {
+                Text("+1")
+            }
+        }
 
-        // Botón Registrar (validación simple)
-        Button(
-            onClick = {
-                resultado = if (nombre.isNotBlank() && correo.contains("@")) {
-                    " Registro exitoso: $nombre\n$correo\nSuscrito: $suscrito"
-                } else {
-                    " Por favor completa todos los campos correctamente"
+        Text("\uD83D\uDC64 Rota la pantalla y observa qué contador se reinicia.")
+    }
+}
+
+@Composable
+fun BloqueoContador() {
+    var contador by rememberSaveable { mutableStateOf(0) }
+    var desbloqueado by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Botón para bloquear/desbloquear
+        Button(onClick = { desbloqueado = !desbloqueado }) {
+            Text(if (desbloqueado) "Bloquear" else "Desbloquear")
+        }
+        Image(
+            painter = painterResource(id = R.drawable.mujer),
+            contentDescription = "imagen",
+            modifier = Modifier.size(100.dp)
+
+        )
+
+        if (desbloqueado) {
+            // Si está desbloqueado, mostrar contador y botón
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Contador: $contador")
+                Button(onClick = { contador++ }) {
+                    Text("+1")
                 }
-                Toast.makeText(context, if (resultado.startsWith("✅")) "Registro OK" else "Error en registro", Toast.LENGTH_SHORT).show()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6A4BCF))
-        ) {
-            Text("Registrar", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Caja de resultado
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color(0xFFF3E9FF), shape = RoundedCornerShape(6.dp))
-                .padding(12.dp)
-        ) {
-            Text(
-                text = "RESULTADO\n${if (resultado.isEmpty()) "—" else resultado}",
-                fontSize = 14.sp,
-                color = Color.Black
-            )
+            }
+        } else {
+            // Si está bloqueado, mostrar mensaje de error
+            Text("\uD83D\uDD13 Contador bloqueado", color = MaterialTheme.colorScheme.error)
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun RegistroPreview() {
+fun PreviewAll() {
     Semana04Theme {
-        RegistroFormulario()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(40.dp)
+        ) {
+            ContadorScreen()
+            BloqueoContador()
+        }
     }
 }
